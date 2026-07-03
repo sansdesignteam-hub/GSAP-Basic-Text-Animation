@@ -1,0 +1,480 @@
+<!--
+  ============================================================================
+  GSAP TEXT INTERACTIONS — 20 Premium Animations (Production Ready)
+  ----------------------------------------------------------------------------
+  • GSAP 3 (latest CDN) + SplitText + ScrollTrigger + TextPlugin
+  • Only GSAP is used, no other libraries
+  • All motion via transform + opacity (60fps, GPU friendly)
+  • Every card has: Replay button + Copy Code button
+  • "Copy Code" copies a STANDALONE, reproducible HTML file for that one anim
+  • Entrance anims auto-play on load; hover/mouse anims run on interaction
+  • Responsive, modern font, minimal background, prefers-reduced-motion aware
+  ============================================================================
+-->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GSAP Text Interactions — 20 Animasi (dengan Copy Code)</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* ========================= DESIGN TOKENS ========================= */
+:root{
+  --bg:#0b0c10; --bg-soft:#14161d; --card:#101218;
+  --border:rgba(255,255,255,.08);
+  --text:#f4f6fb; --muted:#8b93a7;
+  --accent:#7c9cff; --accent-2:#c9a2ff;
+  --radius:18px;
+  --font-body:"Inter",system-ui,sans-serif;
+  --font-display:"Space Grotesk","Inter",sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:radial-gradient(1200px 600px at 50% -10%,rgba(124,156,255,.10),transparent 60%),var(--bg);
+  color:var(--text);font-family:var(--font-body);-webkit-font-smoothing:antialiased;
+  line-height:1.5;min-height:100vh;
+}
+.page-head{text-align:center;padding:64px 20px 20px;max-width:860px;margin:0 auto}
+.page-head h1{
+  font-family:var(--font-display);font-size:clamp(28px,5vw,46px);font-weight:700;letter-spacing:-.02em;
+  background:linear-gradient(90deg,var(--text),var(--accent));-webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.page-head p{color:var(--muted);margin-top:12px;font-size:15px}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:22px;max-width:1280px;margin:0 auto;padding:24px 20px 96px}
+.card{position:relative;background:linear-gradient(180deg,var(--card),var(--bg-soft));border:1px solid var(--border);border-radius:var(--radius);padding:20px;overflow:hidden;min-height:230px;display:flex;flex-direction:column}
+.card__meta{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.card__idx{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--accent);background:rgba(124,156,255,.12);border:1px solid rgba(124,156,255,.25);padding:3px 9px;border-radius:999px}
+.card__desc{color:var(--muted);font-size:12.5px;margin-top:6px;min-height:32px}
+
+.stage{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;padding:22px 6px;min-height:96px}
+.stage .headline{font-family:var(--font-display);font-weight:700;font-size:clamp(22px,3.4vw,30px);letter-spacing:-.01em;line-height:1.12;will-change:transform,opacity}
+
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:7px;font:600 12.5px/1 var(--font-body);color:var(--text);background:rgba(255,255,255,.04);border:1px solid var(--border);padding:8px 13px;border-radius:10px;cursor:pointer;transition:transform .15s ease,background .2s ease,border-color .2s ease}
+.btn:hover{background:rgba(124,156,255,.14);border-color:rgba(124,156,255,.35);transform:translateY(-1px)}
+.btn:active{transform:translateY(0) scale(.97)}
+.btn svg{width:13px;height:13px}
+.btn.copied{background:rgba(90,220,150,.16);border-color:rgba(90,220,150,.4);color:#b9f5d0}
+.hint{font-size:11px;color:var(--muted);margin-left:4px}
+
+/* effect-specific */
+.split-line{overflow:hidden;display:inline-block}
+.char,.word{display:inline-block;will-change:transform,opacity}
+.tw-caret{display:inline-block;width:2px;height:1em;margin-left:2px;background:var(--accent);vertical-align:-2px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.neon{color:#fff;text-shadow:0 0 6px var(--accent),0 0 18px var(--accent),0 0 40px var(--accent-2)}
+.glitch{position:relative}
+.glitch::before,.glitch::after{content:attr(data-text);position:absolute;inset:0}
+.glitch::before{color:#ff4d6d;transform:translate(-2px,0)}
+.glitch::after{color:#4de3ff;transform:translate(2px,0)}
+.stage--interactive{cursor:pointer}
+
+/* toast */
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:#0f1420;border:1px solid var(--border);color:var(--text);padding:11px 16px;border-radius:12px;font-size:13px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .25s ease,transform .25s ease;z-index:50}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.foot{text-align:center;color:var(--muted);font-size:12.5px;padding:0 20px 60px}
+@media (max-width:520px){.grid{grid-template-columns:1fr}.page-head{padding-top:40px}}
+</style>
+</head>
+<body>
+
+<header class="page-head">
+  <h1>GSAP Text Interactions</h1>
+  <p>20 animasi teks premium. <strong>Replay</strong> untuk memutar ulang · <strong>Copy Code</strong> untuk menyalin file HTML mandiri (bisa langsung kamu reproduksi).</p>
+</header>
+
+<main class="grid" id="grid"></main>
+<div class="toast" id="toast">Tersalin ✓</div>
+<footer class="foot">Semua animasi hanya memakai transform &amp; opacity untuk performa 60fps.</footer>
+
+<!-- GSAP + plugins (latest v3) -->
+<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/SplitText.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/TextPlugin.min.js"></script>
+
+<script>
+/* ============================================================================
+   SETUP
+   ============================================================================ */
+gsap.registerPlugin(SplitText, ScrollTrigger, TextPlugin);
+gsap.defaults({ ease:"power3.out", duration:0.9 });
+const REDUCED = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function split(el, type="chars"){
+  return new SplitText(el, { type, charsClass:"char", wordsClass:"word", linesClass:"split-line" });
+}
+
+/* ============================================================================
+   ANIMATION DEFINITIONS
+   Each has:
+     • name, desc, text, interactive?, hint?
+     • body: string — JS body of play({headline,stage}); reused LIVE and
+             inside the copied standalone snippet (single source of truth)
+     • css:  string — extra CSS this effect needs (optional)
+   ============================================================================ */
+const ANIMATIONS = [
+{
+  name:"Fade In per Huruf", desc:"Tiap huruf muncul berurutan (character stagger).",
+  text:"Halo Dunia",
+  body:`const s = split(headline, "chars");            // pecah jadi huruf
+gsap.from(s.chars, {
+  autoAlpha:0, duration:0.6, ease:"power2.out",
+  stagger:0.045                                  // jeda antar huruf
+});`
+},
+{
+  name:"Fade In per Kata", desc:"Muncul per kata dengan sedikit geser ke atas.",
+  text:"Desain yang elegan dan modern",
+  body:`const s = split(headline, "words");
+gsap.from(s.words, {
+  autoAlpha:0, y:14, duration:0.7, ease:"power3.out", stagger:0.08
+});`
+},
+{
+  name:"Typewriter Effect", desc:"Mengetik teks satu per satu (TextPlugin).",
+  text:"Membangun antarmuka premium.",
+  css:`.tw-caret{display:inline-block;width:2px;height:1em;margin-left:2px;background:var(--accent,#7c9cff);vertical-align:-2px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}`,
+  body:`const full = headline.textContent;
+headline.innerHTML = '<span class="tw-text"></span><span class="tw-caret"></span>';
+gsap.to(headline.querySelector(".tw-text"), {
+  duration: full.length * 0.045,                 // durasi ~ panjang teks
+  text:{ value:full }, ease:"none"
+});`
+},
+{
+  name:"Scramble Text", desc:"Huruf acak mengunci ke teks final satu per satu.",
+  text:"SCRAMBLE",
+  body:`const final = headline.textContent;
+const glyphs = "ABCDEFGHIJKLMNOPQRSTUVWXYZ#$%&@";
+const state = { p:0 };
+gsap.to(state, {
+  p:1, duration:1.4, ease:"power2.out",
+  onUpdate(){
+    const locked = Math.floor(state.p * final.length);
+    let out = "";
+    for(let i=0;i<final.length;i++)
+      out += i<locked ? final[i] : glyphs[(Math.random()*glyphs.length)|0];
+    headline.textContent = out;
+  },
+  onComplete(){ headline.textContent = final; }
+});`
+},
+{
+  name:"Split Text Reveal", desc:"Baris di-clip lalu huruf naik dari bawah mask.",
+  text:"Reveal yang halus",
+  body:`const s = split(headline, "chars,lines");
+gsap.set(s.lines, { overflow:"hidden" });
+gsap.from(s.chars, { yPercent:120, duration:0.9, ease:"power4.out", stagger:0.03 });`
+},
+{
+  name:"Slide Up Characters", desc:"Huruf meluncur dari bawah dengan overshoot lembut.",
+  text:"Naik ke atas",
+  body:`const s = split(headline, "chars");
+gsap.from(s.chars, {
+  yPercent:100, autoAlpha:0, duration:0.8, ease:"back.out(1.6)", stagger:0.035
+});`
+},
+{
+  name:"Slide Down Words", desc:"Kata turun dari atas dengan blur reveal.",
+  text:"Turun dengan blur",
+  body:`const s = split(headline, "words");
+gsap.from(s.words, {
+  y:-26, autoAlpha:0, filter:"blur(8px)", duration:0.8, ease:"power3.out", stagger:0.09
+});`
+},
+{
+  name:"Rotate Characters", desc:"Huruf berputar 3D (rotationX) saat muncul.",
+  text:"Rotasi 3D",
+  body:`const s = split(headline, "chars");
+gsap.set(headline, { perspective:600 });
+gsap.from(s.chars, {
+  rotationX:-90, autoAlpha:0, transformOrigin:"50% 50% -20px",
+  duration:0.85, ease:"power3.out", stagger:0.05
+});`
+},
+{
+  name:"Wave Text", desc:"Gelombang naik-turun tak berujung (yoyo loop).",
+  text:"Gelombang",
+  body:`const s = split(headline, "chars");
+gsap.to(s.chars, {
+  yPercent:-45, duration:0.55, ease:"sine.inOut",
+  stagger:{ each:0.06, repeat:-1, yoyo:true }
+});`
+},
+{
+  name:"Elastic Bounce", desc:"Huruf memantul elastis dari skala kecil.",
+  text:"Elastis!",
+  body:`const s = split(headline, "chars");
+gsap.from(s.chars, {
+  scale:0, autoAlpha:0, duration:1.1, ease:"elastic.out(1,0.35)", stagger:0.05
+});`
+},
+{
+  name:"Glitch Reveal", desc:"Efek RGB-split bergetar lalu stabil.",
+  text:"GLITCH",
+  css:`.glitch{position:relative}
+.glitch::before,.glitch::after{content:attr(data-text);position:absolute;inset:0}
+.glitch::before{color:#ff4d6d;transform:translate(-2px,0)}
+.glitch::after{color:#4de3ff;transform:translate(2px,0)}`,
+  body:`headline.classList.add("glitch");
+headline.setAttribute("data-text", headline.textContent);
+gsap.timeline()
+  .from(headline, { autoAlpha:0, duration:0.2 })
+  .to(headline, { x:2, skewX:6, duration:0.05, repeat:6, yoyo:true })
+  .to(headline, { x:0, skewX:0, duration:0.15, ease:"power2.out" });`
+},
+{
+  name:"Neon Flicker", desc:"Kedip neon lalu menyala penuh dengan glow.",
+  text:"NEON",
+  css:`.neon{color:#fff;text-shadow:0 0 6px var(--accent,#7c9cff),0 0 18px var(--accent,#7c9cff),0 0 40px var(--accent-2,#c9a2ff)}`,
+  body:`headline.classList.add("neon");
+gsap.timeline()
+  .set(headline,{ autoAlpha:0 })
+  .to(headline,{ autoAlpha:1, duration:0.05 })
+  .to(headline,{ autoAlpha:0.2, duration:0.05 })
+  .to(headline,{ autoAlpha:1, duration:0.05 })
+  .to(headline,{ autoAlpha:0.4, duration:0.05 })
+  .to(headline,{ autoAlpha:1, duration:0.3, ease:"power2.out" });`
+},
+{
+  name:"Blur to Sharp", desc:"Dari blur berat + skala turun ke tajam.",
+  text:"Fokus tajam",
+  body:`gsap.from(headline, {
+  filter:"blur(16px)", scale:1.12, autoAlpha:0, duration:1.1, ease:"power3.out"
+});`
+},
+{
+  name:"Zoom In Characters", desc:"Tiap huruf zoom-in dari pusat (from center).",
+  text:"Zoom In",
+  body:`const s = split(headline, "chars");
+gsap.from(s.chars, {
+  scale:2.4, autoAlpha:0, duration:0.7, ease:"power4.out",
+  stagger:{ each:0.05, from:"center" }
+});`
+},
+{
+  name:"Flip Text Reveal", desc:"Kata membalik pada sumbu X seperti papan flip.",
+  text:"Flip masuk",
+  body:`const s = split(headline, "words");
+gsap.set(headline,{ perspective:800 });
+gsap.from(s.words, {
+  rotationX:90, autoAlpha:0, transformOrigin:"50% 0%",
+  duration:0.85, ease:"power3.out", stagger:0.12
+});`
+},
+{
+  name:"Mask Reveal", desc:"Teks tersingkap kiri→kanan lewat clip-path.",
+  text:"Tersingkap",
+  body:`gsap.fromTo(headline,
+  { clipPath:"inset(0 100% 0 0)" },
+  { clipPath:"inset(0 0% 0 0)", duration:1, ease:"power4.inOut" }
+);`
+},
+{
+  name:"Infinite Floating", desc:"Melayang naik-turun tanpa henti (ambient).",
+  text:"Melayang",
+  body:`gsap.to(headline, { y:-12, duration:2, ease:"sine.inOut", repeat:-1, yoyo:true });`
+},
+{
+  name:"Scroll Trigger Reveal", desc:"Muncul saat elemen masuk viewport (scroll).",
+  text:"Muncul saat scroll",
+  body:`const s = split(headline, "words");
+gsap.from(s.words, {
+  autoAlpha:0, y:20, duration:0.8, ease:"power3.out", stagger:0.08,
+  scrollTrigger:{ trigger:stage, start:"top 88%", toggleActions:"play none none reverse" }
+});`
+},
+{
+  name:"Hover Letter Explosion", desc:"Huruf terpental acak saat di-hover.", interactive:true, hint:"(hover)",
+  body:`const s = split(headline, "chars");
+stage.addEventListener("mouseenter", () => gsap.to(s.chars, {
+  x:()=>gsap.utils.random(-40,40), y:()=>gsap.utils.random(-40,40),
+  rotation:()=>gsap.utils.random(-60,60), duration:0.5, ease:"power3.out"
+}));
+stage.addEventListener("mouseleave", () => gsap.to(s.chars, {
+  x:0, y:0, rotation:0, duration:0.7, ease:"elastic.out(1,0.5)"
+}));`
+},
+{
+  name:"Mouse Follow Distortion", desc:"Huruf condong mengikuti kursor (magnetic).", interactive:true, hint:"(gerakkan mouse)",
+  body:`const s = split(headline, "chars");
+const xTo = s.chars.map(c=>gsap.quickTo(c,"x",{duration:0.6,ease:"power3.out"}));
+const yTo = s.chars.map(c=>gsap.quickTo(c,"y",{duration:0.6,ease:"power3.out"}));
+stage.addEventListener("mousemove", e=>{
+  const r = stage.getBoundingClientRect();
+  const mx = e.clientX - r.left - r.width/2;
+  const my = e.clientY - r.top  - r.height/2;
+  s.chars.forEach((c,i)=>{
+    const pull = (i - s.chars.length/2) * 1.5;   // magnetic per-huruf
+    xTo[i](mx*0.06 + pull); yTo[i](my*0.10);
+  });
+});
+stage.addEventListener("mouseleave", ()=> s.chars.forEach((_,i)=>{ xTo[i](0); yTo[i](0); }));`
+}
+];
+
+/* ============================================================================
+   Build a runnable play() from the stored body string.
+   Same string is reused for the copied snippet → single source of truth.
+   ============================================================================ */
+function compile(body){
+  return new Function("headline", "stage", "split", "gsap", body);
+}
+
+/* Build a STANDALONE, reproducible HTML file for one animation. */
+function buildStandalone(a){
+  const extraCss = a.css ? "\n  "+a.css.split("\n").join("\n  ") : "";
+  const isInteractive = !!a.interactive;
+  const indentedBody = a.body.split("\n").map(l=>"    "+l).join("\n");
+  return `<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>${a.name} — GSAP</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root{ --accent:#7c9cff; --accent-2:#c9a2ff; }
+  *{margin:0;box-sizing:border-box}
+  body{min-height:100vh;display:grid;place-items:center;gap:26px;align-content:center;
+       background:#0b0c10;color:#f4f6fb;font-family:"Space Grotesk",sans-serif}
+  .stage{display:flex;align-items:center;justify-content:center;min-height:120px;${isInteractive ? "cursor:pointer;" : ""}}
+  .headline{font-size:clamp(28px,6vw,56px);font-weight:700;letter-spacing:-.01em;will-change:transform,opacity}
+  .char,.word{display:inline-block;will-change:transform,opacity}
+  .split-line{overflow:hidden;display:inline-block}
+  .replay{font:600 14px/1 sans-serif;color:#fff;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);padding:11px 18px;border-radius:10px;cursor:pointer}
+  .replay:hover{background:rgba(124,156,255,.18)}${extraCss}
+</style>
+</head>
+<body>
+  <!-- STAGE: tempat teks dianimasikan -->
+  <div class="stage" id="stage">
+    <div class="headline" id="headline">${a.text}</div>
+  </div>
+  <button class="replay" id="replay" type="button">Replay${a.hint ? " "+a.hint : ""}</button>
+
+  <!-- GSAP + plugin resmi (latest v3, gratis) -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"><\/script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/SplitText.min.js"><\/script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"><\/script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/TextPlugin.min.js"><\/script>
+  <script>
+  gsap.registerPlugin(SplitText, ScrollTrigger, TextPlugin);
+  gsap.defaults({ ease:"power3.out", duration:0.9 });
+
+  // helper: pecah teks jadi huruf/kata (transform-friendly)
+  function split(el, type="chars"){
+    return new SplitText(el, { type, charsClass:"char", wordsClass:"word", linesClass:"split-line" });
+  }
+
+  const stage = document.getElementById("stage");
+  const headline = document.getElementById("headline");
+  const original = headline.innerHTML;
+
+  // ---- ANIMASI: ${a.name} ----
+  function play(headline, stage){
+${indentedBody}
+  }
+
+  function run(){
+    gsap.killTweensOf(headline);
+    headline.className = "headline";
+    headline.removeAttribute("style");
+    headline.innerHTML = original;
+    play(headline, stage);
+  }
+
+  document.getElementById("replay").addEventListener("click", run);
+  run(); // jalan otomatis saat halaman dibuka
+  <\/script>
+</body>
+</html>`;
+}
+
+/* ============================================================================
+   Copy helper (Clipboard API + fallback)
+   ============================================================================ */
+const toast = document.getElementById("toast");
+function showToast(msg){
+  toast.textContent = msg;
+  toast.classList.add("show");
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(()=>toast.classList.remove("show"), 1600);
+}
+async function copyText(text){
+  try{ await navigator.clipboard.writeText(text); return true; }
+  catch(e){
+    const ta = document.createElement("textarea");
+    ta.value = text; ta.style.position="fixed"; ta.style.opacity="0";
+    document.body.appendChild(ta); ta.select();
+    let ok=false; try{ ok=document.execCommand("copy"); }catch(_){}
+    document.body.removeChild(ta);
+    return ok;
+  }
+}
+
+/* ============================================================================
+   BOOTSTRAP
+   ============================================================================ */
+const ICON_REPLAY = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>`;
+const ICON_COPY   = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>`;
+
+ANIMATIONS.forEach((anim, i)=>{
+  const idx = String(i+1).padStart(2,"0");
+  const card = document.createElement("section");
+  card.className = "card";
+  card.innerHTML = `
+    <div class="card__meta"><span class="card__idx">${idx} · ${anim.name}</span></div>
+    <p class="card__desc">${anim.desc}</p>
+    <div class="stage ${anim.interactive ? "stage--interactive" : ""}">
+      <div class="headline">${anim.text}</div>
+    </div>
+    <div class="actions">
+      <button class="btn js-replay" type="button">${ICON_REPLAY} Replay
+        ${anim.hint ? `<span class="hint">${anim.hint}</span>` : ""}</button>
+      <button class="btn js-copy" type="button">${ICON_COPY} Copy Code</button>
+    </div>`;
+  document.getElementById("grid").appendChild(card);
+
+  const headline = card.querySelector(".headline");
+  const stage = card.querySelector(".stage");
+  const original = headline.innerHTML;
+  const play = compile(anim.body);
+
+  const run = ()=>{
+    gsap.killTweensOf(headline);
+    headline.className = "headline";
+    headline.removeAttribute("style");
+    headline.innerHTML = original;
+    if(REDUCED){ gsap.set(headline,{autoAlpha:1}); return; }
+    play(headline, stage, split, gsap);
+  };
+
+  card.querySelector(".js-replay").addEventListener("click", run);
+
+  const copyBtn = card.querySelector(".js-copy");
+  copyBtn.addEventListener("click", async ()=>{
+    const ok = await copyText(buildStandalone(anim));
+    showToast(ok ? `Kode "${anim.name}" tersalin ✓` : "Gagal menyalin");
+    if(ok){
+      copyBtn.classList.add("copied");
+      copyBtn.innerHTML = `${ICON_COPY} Tersalin ✓`;
+      setTimeout(()=>{ copyBtn.classList.remove("copied"); copyBtn.innerHTML = `${ICON_COPY} Copy Code`; }, 1600);
+    }
+  });
+
+  run(); // auto-play / bind on load
+});
+</script>
+</body>
+</html>
